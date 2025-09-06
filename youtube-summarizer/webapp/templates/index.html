@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Summarizer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-video"></i>
+                    <h1>YouTube Video Summarizer</h1>
+                </div>
+                <p class="subtitle">AI-powered video analysis with timestamps using Gemini</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Input Section -->
+            <div class="input-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-link"></i> Video Input</h2>
+                    </div>
+                    <div class="card-body">
+                        <form id="summarizeForm">
+                            <div class="form-group">
+                                <label for="videoUrl">YouTube Video URL</label>
+                                <div class="input-with-button">
+                                    <input 
+                                        type="url" 
+                                        id="videoUrl" 
+                                        name="videoUrl" 
+                                        placeholder="https://www.youtube.com/watch?v=..."
+                                        required
+                                    >
+                                    <button type="button" id="checkVideoBtn" class="btn btn-secondary">
+                                        <i class="fas fa-info-circle"></i> Check
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="summaryType">Summary Type</label>
+                                    <select id="summaryType" name="summaryType">
+                                        <option value="brief">Brief Summary</option>
+                                        <option value="detailed">Detailed Analysis</option>
+                                        <option value="key_points">Key Points</option>
+                                        <option value="timestamped">Timestamped Breakdown</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="chunkDuration">Chunk Duration (seconds)</label>
+                                    <input type="number" id="chunkDuration" name="chunkDuration" value="60" min="30" max="300">
+                                </div>
+                            </div>
+
+                            <button type="submit" id="analyzeBtn" class="btn btn-primary btn-large">
+                                <i class="fas fa-magic"></i> Analyze Video
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Video Info Section -->
+            <div id="videoInfoSection" class="info-section" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-info-circle"></i> Video Information</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="videoInfo" class="video-info">
+                            <!-- Video info will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading Section -->
+            <div id="loadingSection" class="loading-section" style="display: none;">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="loading-content">
+                            <div class="spinner"></div>
+                            <h3>Processing Video...</h3>
+                            <div id="progressMessage" class="progress-message">Initializing analysis...</div>
+                            <div class="progress-bar">
+                                <div id="progressFill" class="progress-fill"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis Results Section -->
+            <div id="resultsSection" class="results-section" style="display: none;">
+                <div class="card analysis-results-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-chart-line"></i> Analysis Results</h2>
+                        <div class="result-meta">
+                            <span id="resultTimestamp" class="timestamp"></span>
+                            <span id="resultType" class="result-type"></span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Video Metadata -->
+                        <div id="videoMetadata" class="metadata-section">
+                            <div class="metadata-grid">
+                                <div class="metadata-item">
+                                    <i class="fas fa-clock"></i>
+                                    <div>
+                                        <span class="metadata-label">Duration</span>
+                                        <span id="videoDuration" class="metadata-value">--</span>
+                                    </div>
+                                </div>
+                                <div class="metadata-item">
+                                    <i class="fas fa-file-text"></i>
+                                    <div>
+                                        <span class="metadata-label">Transcript Entries</span>
+                                        <span id="transcriptEntries" class="metadata-value">--</span>
+                                    </div>
+                                </div>
+                                <div class="metadata-item">
+                                    <i class="fas fa-compress-alt"></i>
+                                    <div>
+                                        <span class="metadata-label">Compression Ratio</span>
+                                        <span id="compressionRatio" class="metadata-value">--</span>
+                                    </div>
+                                </div>
+                                <div class="metadata-item">
+                                    <i class="fas fa-layer-group"></i>
+                                    <div>
+                                        <span class="metadata-label">Chunks</span>
+                                        <span id="chunksCount" class="metadata-value">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Main Summary -->
+                        <div id="summarySection" class="summary-section">
+                            <h3><i class="fas fa-file-alt"></i> Summary</h3>
+                            <div id="summaryContent" class="summary-content">
+                                <!-- Summary will be populated here -->
+                            </div>
+                        </div>
+
+                        <!-- Key Quotes -->
+                        <div id="quotesSection" class="quotes-section" style="display: none;">
+                            <h3><i class="fas fa-quote-right"></i> Key Quotes</h3>
+                            <div id="quotesContent" class="quotes-content">
+                                <!-- Quotes will be populated here -->
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="action-buttons">
+                            <button id="copyResultsBtn" class="btn btn-secondary">
+                                <i class="fas fa-copy"></i> Copy Results
+                            </button>
+                            <button id="downloadResultsBtn" class="btn btn-secondary">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                            <button id="newAnalysisBtn" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> New Analysis
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Section -->
+            <div id="errorSection" class="error-section" style="display: none;">
+                <div class="card error-card">
+                    <div class="card-body">
+                        <div class="error-content">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h3>Analysis Failed</h3>
+                            <p id="errorMessage">An error occurred during analysis.</p>
+                            <button id="retryBtn" class="btn btn-primary">
+                                <i class="fas fa-redo"></i> Try Again
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 YouTube Video Summarizer. Powered by Gemini AI.</p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
